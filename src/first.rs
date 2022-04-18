@@ -28,25 +28,26 @@ impl List {
     }
 
     fn pop_node(&mut self) -> Link {
-        mem::replace(&mut self.head, Link::Empty)
+        match mem::replace(&mut self.head, Link::Empty) {
+            Link::Empty => Link::Empty,
+            Link::More(mut node) => {
+                self.head = mem::replace(&mut node.next, Link::Empty);
+                Link::More(node)
+            }
+        }
     }
 
     pub fn pop(&mut self) -> Option<i32> {
         match self.pop_node() {
             Link::Empty => None,
-            Link::More(node) => {
-                self.head = node.next;
-                Some(node.elem)
-            }
+            Link::More(node) => Some(node.elem),
         }
     }
 }
 
 impl Drop for List {
     fn drop(&mut self) {
-        while let Link::More(boxed_node) = self.pop_node() {
-            self.head = boxed_node.next;
-        }
+        while let Link::More(_) = self.pop_node() {}
     }
 }
 

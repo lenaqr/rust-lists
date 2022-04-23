@@ -56,6 +56,19 @@ impl<T> List<T> {
             next: self.head.as_deref_mut(),
         }
     }
+
+    pub fn fold<B, F>(&self, init: B, f: F) -> B
+    where
+        F: Fn(B, &T) -> B,
+    {
+        let mut cur = init;
+        let mut next = &self.head;
+        while let Some(boxed_node) = next {
+            cur = f(cur, &boxed_node.elem);
+            next = &boxed_node.next;
+        }
+        cur
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -202,5 +215,16 @@ mod test {
         assert_eq!(iter.next(), Some(&mut 22));
         assert_eq!(iter.next(), Some(&mut 1));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn fold() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        assert_eq!(list.fold(0, |x, y| x + y), 6);
+        assert_eq!(list.iter().fold(0, |x, y| x + y), 6);
     }
 }

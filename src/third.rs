@@ -41,8 +41,8 @@ impl<T> Drop for List<T> {
     fn drop(&mut self) {
         let mut head = self.head.take();
         while let Some(node) = head {
-            if let Ok(mut node) = Rc::try_unwrap(node) {
-                head = node.next.take();
+            if let Ok(node) = Rc::try_unwrap(node) {
+                head = node.next;
             } else {
                 break;
             }
@@ -99,5 +99,13 @@ mod test {
         assert_eq!(iter.next(), Some(&3));
         assert_eq!(iter.next(), Some(&2));
         assert_eq!(iter.next(), Some(&1));
+    }
+
+    #[test]
+    fn drop_no_stack_overflow() {
+        let mut list = List::new();
+        for i in 1..20000 {
+            list = list.prepend(i);
+        }
     }
 }

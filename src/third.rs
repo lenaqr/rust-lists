@@ -40,12 +40,8 @@ impl<T> List<T> {
 impl<T> Drop for List<T> {
     fn drop(&mut self) {
         let mut head = self.head.take();
-        while let Some(node) = head {
-            if let Ok(node) = Rc::try_unwrap(node) {
-                head = node.next;
-            } else {
-                break;
-            }
+        while let Some(Ok(node)) = head.map(Rc::try_unwrap) {
+            head = node.next;
         }
     }
 }

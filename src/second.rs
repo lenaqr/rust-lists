@@ -50,6 +50,27 @@ impl<T> List<T> {
             next: self.head.as_deref_mut(),
         }
     }
+
+    pub fn reverse(&self) -> List<&T> {
+        let mut ret = List::new();
+        for elem in self.iter() {
+            ret.push(elem)
+        }
+        ret
+    }
+
+    pub fn filter_map<B, F>(&self, f: F) -> List<B>
+    where
+        F: Fn(&T) -> Option<B>,
+    {
+        let mut ret = List::new();
+        for elem in self.reverse().iter() {
+            if let Some(elem) = f(elem) {
+                ret.push(elem)
+            }
+        }
+        ret
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -195,6 +216,20 @@ mod test {
         assert_eq!(iter.next(), Some(&mut 33));
         assert_eq!(iter.next(), Some(&mut 22));
         assert_eq!(iter.next(), Some(&mut 1));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn filter_map() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+        let list = list.filter_map(|x| if x % 2 == 1 { Some(x + 10) } else { None });
+
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), Some(&13));
+        assert_eq!(iter.next(), Some(&11));
         assert_eq!(iter.next(), None);
     }
 }

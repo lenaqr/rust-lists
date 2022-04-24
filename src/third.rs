@@ -22,13 +22,10 @@ impl<T> List<T> {
         List { head }
     }
 
-    pub fn tail(&self) -> List<T> {
-        let head = self.head.as_ref().and_then(|node| node.next.clone());
-        List { head }
-    }
-
-    pub fn head(&self) -> Option<&T> {
-        self.head.as_ref().map(|node| &node.elem)
+    pub fn headtail(&self) -> Option<(&T, List<T>)> {
+        let Node { elem, next } = self.head.as_deref()?;
+        let tail = List { head: next.clone() };
+        Some((elem, tail))
     }
 
     pub fn iter(&self) -> Iter<'_, T> {
@@ -54,10 +51,9 @@ impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.next.map(|node| {
-            self.next = node.next.as_deref();
-            &node.elem
-        })
+        let Node { elem, next } = self.next?;
+        self.next = next.as_deref();
+        Some(&elem)
     }
 }
 
@@ -68,23 +64,20 @@ mod test {
     #[test]
     fn basics() {
         let list = List::new();
-        assert_eq!(list.head(), None);
+        assert!(list.headtail().is_none());
 
         let list = list.prepend(1).prepend(2).prepend(3);
-        assert_eq!(list.head(), Some(&3));
 
-        let list = list.tail();
-        assert_eq!(list.head(), Some(&2));
+        let (head, list) = list.headtail().unwrap();
+        assert_eq!(head, &3);
 
-        let list = list.tail();
-        assert_eq!(list.head(), Some(&1));
+        let (head, list) = list.headtail().unwrap();
+        assert_eq!(head, &2);
 
-        let list = list.tail();
-        assert_eq!(list.head(), None);
+        let (head, list) = list.headtail().unwrap();
+        assert_eq!(head, &1);
 
-        // Make sure empty tail works
-        let list = list.tail();
-        assert_eq!(list.head(), None);
+        assert!(list.headtail().is_none());
     }
 
     #[test]

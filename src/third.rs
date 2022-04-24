@@ -32,6 +32,22 @@ impl<T> List<T> {
         let next = self.head.as_deref();
         Iter { next }
     }
+
+    pub fn filter_map<F, S>(&self, f: F) -> List<S>
+    where
+        F: Fn(&T) -> Option<S>,
+    {
+        match self.headtail() {
+            None => List { head: None },
+            Some((head, tail)) => {
+                if let Some(head) = f(head) {
+                    tail.filter_map(f).prepend(head)
+                } else {
+                    tail.filter_map(f)
+                }
+            }
+        }
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -88,6 +104,17 @@ mod test {
         assert_eq!(iter.next(), Some(&3));
         assert_eq!(iter.next(), Some(&2));
         assert_eq!(iter.next(), Some(&1));
+    }
+
+    #[test]
+    fn filter_map() {
+        let list = List::new().prepend(1).prepend(2).prepend(3);
+        let list = list.filter_map(|x| if x % 2 == 1 { Some(x + 10) } else { None });
+
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), Some(&13));
+        assert_eq!(iter.next(), Some(&11));
+        assert_eq!(iter.next(), None);
     }
 
     #[test]
